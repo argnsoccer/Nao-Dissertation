@@ -13,7 +13,7 @@ import cv2
 import cv2.cv as cv
 
 ''' ROBOT CONFIGURATION '''
-robotIP = "192.168.137.171"
+robotIP = "192.168.137.238"
 ses = qi.Session()
 ses.connect(robotIP)
 per = qi.PeriodicTask()
@@ -79,10 +79,14 @@ def locate_ball(centers, rot_angles):
     else:
         string = "I see the ball."
         a = index[0]
+        print a
         b = index[1]
+        print b
         RF = (rot_angles[b][0] - rot_angles[a][0]) / (centers[a][1] - centers[b][1])
+        print RF
         ang = rot_angles[a][0] - (320 - centers[a][1])*RF
-        # ang = ang.item()
+        ang = ang/100
+        ang = ang.item()
         state = 2
         motion.angleInterpolationWithSpeed("Head", [ang, 0.035], 0.1)
     print ang
@@ -105,10 +109,10 @@ def CenterOfMassUp(image):
     Calculate position and radius of circle using the Circular Hough Transform
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lowera = np.array([160, 150, 100])
+    lowera = np.array([157, 120, 100])
     uppera = np.array([180, 255, 255])
-    lowerb = np.array([0, 150, 100])
-    upperb = np.array([10, 250, 255])
+    lowerb = np.array([0, 120, 100])
+    upperb = np.array([12, 250, 255])
     x = 0
     y = 0
     mask1 = cv2.inRange(hsv, lowera, uppera)
@@ -117,13 +121,13 @@ def CenterOfMassUp(image):
     kernel = np.ones((5,5),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    cv2.imwrite("hsvMask.png", mask)
+    # cv2.imwrite("hsvMask.png", mask)
     
     blur = cv2.GaussianBlur(mask, (9,9), 0)
-    cv2.imwrite("blurredImg.png", blur)
+    # cv2.imwrite("blurredImg.png", blur)
 
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 150, 20, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 100, 20, 0)
 
     try:
       circles = np.uint16(np.around(circles))
@@ -133,8 +137,15 @@ def CenterOfMassUp(image):
      
     try:
       for i in circles[0,:]:
-        x = i[0]
-        y = i[1]
+        if i[0] > 0:
+            x = i[0]
+        else:
+            x = 0
+        if i[1] > 0:
+            y = i[1]
+        else:
+            y = 0
+            
     except TypeError:
       print("No Circles Found! Adjust parameters of CHT")
 
@@ -159,13 +170,13 @@ def CenterOfMassDown(image):
     kernel = np.ones((5,5),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    cv2.imwrite("hsvMask.png", mask)
+    # cv2.imwrite("hsvMask.png", mask)
     
     blur = cv2.GaussianBlur(mask, (9,9), 0)
-    cv2.imwrite("blurredImg.png", blur)
+    # cv2.imwrite("blurredImg.png", blur)
 
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 150, 20, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 2, 40, 400, 100, 15, 0)
 
     try:
       circles = np.uint16(np.around(circles))
@@ -175,8 +186,14 @@ def CenterOfMassDown(image):
      
     try:
       for i in circles[0,:]:
-        x = i[0]
-        y = i[1]
+        if i[0] > 0:
+            x = i[0]
+        else:
+            x = 0
+        if i[1] > 0:
+            y = i[1]
+        else:
+            y = 0
     except TypeError:
       print("No Circles Found! Adjust parameters of CHT")
 

@@ -13,7 +13,7 @@ from PIL import Image
 
 from naoqi import ALProxy
 
-IP = "192.168.137.171"  # Replace here with your NaoQi's IP address.
+IP = "192.168.137.238"  # Replace here with your NaoQi's IP address.
 PORT = 9559
 
   
@@ -56,6 +56,7 @@ def takeImage():
 
   # Save the image.
   im.save("camImage.png", "PNG")
+  process()
 
 def process():
   """
