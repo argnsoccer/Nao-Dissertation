@@ -5,6 +5,7 @@ import math
 from functools import partial
 import numpy as np
 import motion as mot
+from operator import itemgetter
 
 # Python Image Library
 from PIL import Image
@@ -78,23 +79,22 @@ def locate_ball(centers, rot_angles):
         motion.angleInterpolationWithSpeed("Head", [ang, 0.035], 0.1)
     else:
         string = "I see the ball."
+
         a = index[0]
-        print a
-        b = index[1]
-        print b
-        RF = (rot_angles[b][0] - rot_angles[a][0]) / (centers[a][1] - centers[b][1])
-        print RF
+        b = index[1]        
+        RF = float((rot_angles[b][0] - rot_angles[a][0]) / (centers[a][1] - centers[b][1]))
+        
+        
         ang = rot_angles[a][0] - (320 - centers[a][1])*RF
-        ang = ang/100
+        # ang = ang/100
         ang = ang.item()
         state = 2
         motion.angleInterpolationWithSpeed("Head", [ang, 0.035], 0.1)
-    print ang
     tts.say(string)
     return [ang, state, RF]
 
 # 
-def move_head(angleScan):
+def move_head(angleScan):   
     """ 
     Move HeadYaw from [-angleScan;angleScan] (Written by David Lavy and Travis Marshall)
     """
@@ -109,10 +109,10 @@ def CenterOfMassUp(image):
     Calculate position and radius of circle using the Circular Hough Transform
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lowera = np.array([157, 120, 100])
+    lowera = np.array([160, 130, 105])
     uppera = np.array([180, 255, 255])
-    lowerb = np.array([0, 120, 100])
-    upperb = np.array([12, 250, 255])
+    lowerb = np.array([0, 130, 105])
+    upperb = np.array([10, 255, 255])
     x = 0
     y = 0
     mask1 = cv2.inRange(hsv, lowera, uppera)
@@ -123,17 +123,20 @@ def CenterOfMassUp(image):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     # cv2.imwrite("hsvMask.png", mask)
     
-    blur = cv2.GaussianBlur(mask, (9,9), 0)
+    blur = cv2.GaussianBlur(mask, (11, 11), 0)
     # cv2.imwrite("blurredImg.png", blur)
 
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 100, 20, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 100, 800, 100, 20, 0)
 
     try:
       circles = np.uint16(np.around(circles))
+      print circles
     except AttributeError:
       print("No Circles Found! Adjust parameters of CHT.")
 
+    #maxX = max(circles, key=itemgetter(1))[0]
+    #maxY = max(circles, key=itemgetter(1))[1]
      
     try:
       for i in circles[0,:]:
@@ -145,7 +148,6 @@ def CenterOfMassUp(image):
             y = i[1]
         else:
             y = 0
-            
     except TypeError:
       print("No Circles Found! Adjust parameters of CHT")
 
@@ -158,9 +160,9 @@ def CenterOfMassDown(image):
     Calculate position and radius of circle using the Circular Hough Transform
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lowera = np.array([160, 150, 100])
+    lowera = np.array([160, 130, 100])
     uppera = np.array([180, 255, 255])
-    lowerb = np.array([0, 150, 100])
+    lowerb = np.array([0, 130, 100])
     upperb = np.array([10, 250, 255])
     x = 0
     y = 0
@@ -176,7 +178,7 @@ def CenterOfMassDown(image):
     # cv2.imwrite("blurredImg.png", blur)
 
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 2, 40, 400, 100, 15, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 100, 800, 100, 17, 0)
 
     try:
       circles = np.uint16(np.around(circles))
@@ -207,7 +209,7 @@ def analyze_img():
     Find the center position of ball (written by David Lavy and Travis Marshall)
     """
     CM = []
-    for i in range(0, 7):
+    for i in range(0, 5):
         img = cv2.imread(path + "camImage" + str(i) + ".png")
         cm = CenterOfMassUp(img)
         CM.append(cm)
@@ -235,41 +237,41 @@ def scan_area(_angleSearch, CameraIndex):
     motionAngles = []
     maxAngleScan = _angleSearch
 
-    motion.angleInterpolationWithSpeed("Head", [-maxAngleScan, 0.035], 0.1)
+    #motion.angleInterpolationWithSpeed("Head", [-maxAngleScan, 0.035], 0.1)
+    #pic(path + 'camImage0.png', CameraIndex)
+    #commandAngles = motion.getAngles(names, useSensors)
+    #motionAngles.append(commandAngles)
+    #print str(commandAngles)
+    motion.angleInterpolationWithSpeed("Head", [-2*maxAngleScan/3, 0.035], 0.1)
     pic(path + 'camImage0.png', CameraIndex)
     commandAngles = motion.getAngles(names, useSensors)
     motionAngles.append(commandAngles)
     print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [-2*maxAngleScan/3, 0.035], 0.1)
+    motion.angleInterpolationWithSpeed("Head", [-maxAngleScan/3, 0.035], 0.1)
     pic(path + 'camImage1.png', CameraIndex)
     commandAngles = motion.getAngles(names, useSensors)
     motionAngles.append(commandAngles)
     print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [-maxAngleScan/3, 0.035], 0.1)
+    motion.angleInterpolationWithSpeed("Head", [0, 0.035], 0.1)
     pic(path + 'camImage2.png', CameraIndex)
     commandAngles = motion.getAngles(names, useSensors)
     motionAngles.append(commandAngles)
     print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [0, 0.035], 0.1)
+    motion.angleInterpolationWithSpeed("Head", [maxAngleScan/3, 0.035], 0.1)
     pic(path + 'camImage3.png', CameraIndex)
     commandAngles = motion.getAngles(names, useSensors)
     motionAngles.append(commandAngles)
     print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [maxAngleScan/3, 0.035], 0.1)
+    motion.angleInterpolationWithSpeed("Head", [2*maxAngleScan/3, 0.035], 0.1)
     pic(path + 'camImage4.png', CameraIndex)
     commandAngles = motion.getAngles(names, useSensors)
     motionAngles.append(commandAngles)
     print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [2*maxAngleScan/3, 0.035], 0.1)
-    pic(path + 'camImage5.png', CameraIndex)
-    commandAngles = motion.getAngles(names, useSensors)
-    motionAngles.append(commandAngles)
-    print str(commandAngles)
-    motion.angleInterpolationWithSpeed("Head", [maxAngleScan, 0.035], 0.1)
-    pic(path + 'camImage6.png', CameraIndex)
-    commandAngles = motion.getAngles(names, useSensors)
-    motionAngles.append(commandAngles)
-    print str(commandAngles)
+    #motion.angleInterpolationWithSpeed("Head", [maxAngleScan, 0.035], 0.1)
+    #pic(path + 'camImage6.png', CameraIndex)
+    #commandAngles = motion.getAngles(names, useSensors)
+    #motionAngles.append(commandAngles)
+    #print str(commandAngles)
     centers = analyze_img()
     return [centers, motionAngles]
 
@@ -291,6 +293,7 @@ def rotate_center_head(centers, rot_angles):
     """
     index = numBalls(centers)
     found = 1
+    print "len(index): " + str(len(index))
     if len(index) == 0:
         string = "I don't see the ball."
         ang = 100
@@ -305,11 +308,12 @@ def rotate_center_head(centers, rot_angles):
         b = index[1]
         den = 3
         if len(index) < 3:
+        
             ang = (rot_angles[b][0] + rot_angles[a][0])/2
         else:
             c = index[2]
             ang = (rot_angles[b][0] + rot_angles[a][0] + rot_angles[c][0])/3
-    print ang
+    print "ang: " + str(ang)
     motion.angleInterpolationWithSpeed("Head", [0, 0.035], 0.1)
     tts.say(string)
     return ang, found
@@ -361,8 +365,9 @@ def initial_scan():
     else:
         motion.moveTo(0, 0, ang*7/6)
     pic(path + "ball_likely.png",0)
-    [CC1, AA1] = take_pics(math.pi /9, camIndex)
-    print CC1
+    [CC1, AA1] = take_pics(math.pi/9, camIndex)
+    print "Centers of ball_likely:" + str(CC1)
+    print
     [ang, X, delta] = locate_ball(CC1, AA1)
     if ang == 100:
         camIndex = 2
@@ -381,7 +386,7 @@ def walkUp(cm, delta):
     idx = 1
     lowerFlag = 0
     print "Entering uppercam loop"
-    motion.moveTo(0.2, 0, 0)
+    motion.moveTo(0.2, 0.0, 0.0)
     while cm[0] < 420 and cm[0] > 0:
         pp = "ball_upfront"
         ext = ".png"
@@ -399,7 +404,8 @@ def walkUp(cm, delta):
             break
         else:
             alpha = (cm[1] - 320) * delta
-            motion.moveTo(0.2, 0, alpha*7/6)
+            print "alpha:" + str(alpha)
+            motion.moveTo(0.2, 0.0, float((alpha*7/6)))
             idx = idx + 1
             continue
     if lowerFlag == 1:
@@ -438,7 +444,7 @@ def walkDown(cm, delta):
         if cm == [0, 0]:
             return 0, cm
         alpha = (cm[1] - 320) * delta
-        motion.moveTo(0.2, 0, alpha*7/6)
+        motion.moveTo(0.2, 0, float(alpha*7/6))
         idx = idx + 1
     # Tilt the head so it can have a better look of the ball
     anglePitch = math.pi * 20.6 / 180
@@ -446,8 +452,8 @@ def walkDown(cm, delta):
     # print 'Pitching the head'
     # The threshold of 300 is equal to a distance of 15cm from the ball
     # The robot will do a small walk of 7cm and exit the loop
-    print 'Entering sub-precise with cm[0]', cm[0]
-    while cm[0] >= 0  and cm[0] < 300:
+    print 'Entering sub-precise with cm[0]: ', cm[0]
+    while cm[0] > 0  and cm[0] < 300:
         im_num = path + pp+str(idx)+ext
         pic(im_num, 1)
         img = cv2.imread(im_num)

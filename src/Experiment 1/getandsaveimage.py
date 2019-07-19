@@ -48,7 +48,9 @@ def takeImage():
 
   # Get the image size and pixel array.
   imageWidth = naoImage[0]
+  print imageWidth
   imageHeight = naoImage[1]
+  print imageHeight
   array = naoImage[6]
 
   # Create a PIL Image from our pixel array.
