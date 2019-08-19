@@ -14,7 +14,7 @@ import cv2
 import cv2.cv as cv
 
 ''' ROBOT CONFIGURATION '''
-robotIP = "192.168.137.238"
+robotIP = "192.168.137.109"
 ses = qi.Session()
 ses.connect(robotIP)
 per = qi.PeriodicTask()
@@ -83,11 +83,11 @@ def locate_ball(centers, rot_angles):
         a = index[0]
         b = index[1]        
         RF = float((rot_angles[b][0] - rot_angles[a][0]) / (centers[a][1] - centers[b][1]))
-        
-        
-        ang = rot_angles[a][0] - (320 - centers[a][1])*RF
+        ang = rot_angles[b][0] - (320 - centers[a][1])*RF
+        print "Angle before item: " + str(ang)
         # ang = ang/100
         ang = ang.item()
+        print "Angle after item: " + str(ang)
         state = 2
         motion.angleInterpolationWithSpeed("Head", [ang, 0.035], 0.1)
     tts.say(string)
@@ -104,15 +104,15 @@ def move_head(angleScan):
     motion.angleInterpolation("HeadYaw", angleLists, timeLists, True)
 
 
-def CenterOfMassUp(image):
+def CenterOfMassUp(image, a):
     """ 
     Calculate position and radius of circle using the Circular Hough Transform
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lowera = np.array([160, 130, 105])
+    lowera = np.array([155, 65, 0])
     uppera = np.array([180, 255, 255])
-    lowerb = np.array([0, 130, 105])
-    upperb = np.array([10, 255, 255])
+    lowerb = np.array([0, 65, 0])
+    upperb = np.array([15, 255, 255])
     x = 0
     y = 0
     mask1 = cv2.inRange(hsv, lowera, uppera)
@@ -121,13 +121,14 @@ def CenterOfMassUp(image):
     kernel = np.ones((5,5),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    # cv2.imwrite("hsvMask.png", mask)
+    
     
     blur = cv2.GaussianBlur(mask, (11, 11), 0)
     # cv2.imwrite("blurredImg.png", blur)
-
+    cv2.imwrite("hsvMask" + str(a) + ".png", blur)
+    
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 100, 800, 100, 20, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 600, 800, 400, 25)
 
     try:
       circles = np.uint16(np.around(circles))
@@ -140,6 +141,10 @@ def CenterOfMassUp(image):
      
     try:
       for i in circles[0,:]:
+        # draw the outer circle
+        cv2.circle(image,(i[0],i[1]),i[2],(0,255,0),2)
+        # draw the center of the circle
+        cv2.circle(image,(i[0],i[1]),2,(0,0,255),3)
         if i[0] > 0:
             x = i[0]
         else:
@@ -148,22 +153,24 @@ def CenterOfMassUp(image):
             y = i[1]
         else:
             y = 0
+        print "radius: " + str(i[2])
     except TypeError:
       print("No Circles Found! Adjust parameters of CHT")
 
-    CM = [x, y]
+    cv2.imwrite("detectedCircles" + str(a) + ".png", image)
+    CM = [y, x]
 
     return CM
 
-def CenterOfMassDown(image):
+def CenterOfMassDown(image, a):
     """ 
     Calculate position and radius of circle using the Circular Hough Transform
     """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lowera = np.array([160, 130, 100])
+    lowera = np.array([157, 65, 0])
     uppera = np.array([180, 255, 255])
-    lowerb = np.array([0, 130, 100])
-    upperb = np.array([10, 250, 255])
+    lowerb = np.array([0, 65, 0])
+    upperb = np.array([15, 250, 255])
     x = 0
     y = 0
     mask1 = cv2.inRange(hsv, lowera, uppera)
@@ -172,18 +179,18 @@ def CenterOfMassDown(image):
     kernel = np.ones((5,5),np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    # cv2.imwrite("hsvMask.png", mask)
+    cv2.imwrite("hsvMask" + str(a) + ".png", mask)
     
     blur = cv2.GaussianBlur(mask, (9,9), 0)
     # cv2.imwrite("blurredImg.png", blur)
 
     #perform CHT
-    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 100, 800, 100, 17, 0)
+    circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 400, 800, 400, 25)
 
     try:
       circles = np.uint16(np.around(circles))
     except AttributeError:
-      print("No Circles Found! Adjust parameters of CHT.")
+      print("No Circles Found!")
 
      
     try:
@@ -197,9 +204,9 @@ def CenterOfMassDown(image):
         else:
             y = 0
     except TypeError:
-      print("No Circles Found! Adjust parameters of CHT")
+      print("No Circles Found!")
 
-    CM = [x, y]
+    CM = [y, x]
 
     return CM
 
@@ -211,7 +218,7 @@ def analyze_img():
     CM = []
     for i in range(0, 5):
         img = cv2.imread(path + "camImage" + str(i) + ".png")
-        cm = CenterOfMassUp(img)
+        cm = CenterOfMassUp(img, i)
         CM.append(cm)
     return CM
 
@@ -222,7 +229,7 @@ def analyze_img2():
     CM = []
     for i in range(0, 3):
         img = cv2.imread(path + "bFound" + str(i) + ".png")
-        cm = CenterOfMassUp(img)
+        cm = CenterOfMassUp(img, i+5)
         CM.append(cm)
     return CM
 
@@ -323,8 +330,7 @@ def pic(_name, CameraIndex):
     """
     Takes a picture and saves it
     """	
-    videoClient = video.subscribeCamera(
-        "python_client", CameraIndex, resolution, colorSpace, 5)
+    videoClient = video.subscribeCamera("python_client", CameraIndex, resolution, colorSpace, 5)
     naoImage = video.getImageRemote(videoClient)
     video.unsubscribe(videoClient)
     # Get the image size and pixel array.
@@ -375,7 +381,7 @@ def initial_scan():
     print 'Ang', ang
     motion.moveTo(0, 0, ang*7/6)
     img=cv2.imread(path + "ball_likely.png")
-    CM=CenterOfMassUp(img)
+    CM=CenterOfMassUp(img, 10)
         
     return CM, delta, camIndex
 
@@ -393,13 +399,13 @@ def walkUp(cm, delta):
         im_num = path + pp+str(idx)+ext
         pic(im_num, 0)
         img = cv2.imread(im_num)
-        cm = CenterOfMassUp(img)
+        cm = CenterOfMassUp(img, 11)
         print cm
         if cm[0] == 0 and cm[1] == 0:
             # Scan the area with lower camera
             pic(path + 'lower.png', 1)
             img = cv2.imread(path + "lower.png")
-            cm2 = CenterOfMassUp(img)
+            cm2 = CenterOfMassUp(img, 12)
             lowerFlag = 1
             break
         else:
@@ -418,7 +424,7 @@ def walkUp(cm, delta):
     else:
         pic(path + 'lower.png', 1)
         img = cv2.imread(path + 'lower.png')
-        cm2 = CenterOfMassUp(img)
+        cm2 = CenterOfMassUp(img, 13)
         lostFlag = 0
     print "Exiting up loop"
     return lostFlag, cm2
@@ -439,7 +445,7 @@ def walkDown(cm, delta):
         im_num = path + pp+str(idx)+ext
         pic(im_num, 1)
         img = cv2.imread(im_num)
-        cm = CenterOfMassUp(img)
+        cm = CenterOfMassUp(img, 9)
         print im_num, cm
         if cm == [0, 0]:
             return 0, cm
@@ -453,11 +459,11 @@ def walkDown(cm, delta):
     # The threshold of 300 is equal to a distance of 15cm from the ball
     # The robot will do a small walk of 7cm and exit the loop
     print 'Entering sub-precise with cm[0]: ', cm[0]
-    while cm[0] > 0  and cm[0] < 300:
+    while cm[0] >= 0  and cm[0] < 300:
         im_num = path + pp+str(idx)+ext
         pic(im_num, 1)
         img = cv2.imread(im_num)
-        cm = CenterOfMassDown(img)
+        cm = CenterOfMassDown(img, 20)
         print im_num, cm
         if cm == [0, 0]:
             return 0, cm
@@ -479,9 +485,9 @@ def getReady(cm, delta):
     im_num = path + pp+str(idx-1)+ext
     pic(im_num, 1)
     img = cv2.imread(im_num)
-    cm = CenterOfMassDown(img)
+    cm = CenterOfMassDown(img, 21)
     alpha = (cm[1] - 320) * delta
-    motion.moveTo(0, 0, alpha*7/6)
+    motion.moveTo(0, 0, float(alpha*7/6))
     print 'Precising the position'
     print 'This is my cm[0]', cm[0]
     while cm[0] < 370:
@@ -489,13 +495,13 @@ def getReady(cm, delta):
         im_num = path + pp+str(idx)+ext
         pic(im_num, 1)
         img = cv2.imread(im_num)
-        cm = CenterOfMassDown(img)
+        cm = CenterOfMassDown(img, 22)
         print im_num, cm
         if cm == [0, 0]:
             return 0, cm
         if cm[0] < 405:
             alpha = (cm[1] - 320) * delta
-            motion.moveTo(0.05, 0, alpha)
+            motion.moveTo(0.05, 0, float(alpha))
         else:
             break
         idx = idx + 1

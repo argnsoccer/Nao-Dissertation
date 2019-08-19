@@ -13,7 +13,7 @@ import cv2
 import cv2.cv as cv
 
 ''' ROBOT CONFIGURATION '''
-robotIP = "192.168.137.238"
+robotIP = "192.168.137.121"
 ses = qi.Session()
 ses.connect(robotIP)
 per = qi.PeriodicTask()

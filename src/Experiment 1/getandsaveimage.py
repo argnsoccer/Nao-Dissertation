@@ -13,7 +13,7 @@ from PIL import Image
 
 from naoqi import ALProxy
 
-IP = "192.168.137.238"  # Replace here with your NaoQi's IP address.
+IP = "127.0.0.1"  # Replace here with your NaoQi's IP address.
 PORT = 9559
 
   
@@ -32,7 +32,7 @@ def takeImage():
   """
 
   camProxy = ALProxy("ALVideoDevice", IP, PORT)
-  resolution = 2    # VGA
+  resolution = 7   # VGA
   colorSpace = 11   # RGB
 
   videoClient = camProxy.subscribe("python_client", resolution, colorSpace, 5)
@@ -48,16 +48,48 @@ def takeImage():
 
   # Get the image size and pixel array.
   imageWidth = naoImage[0]
-  print imageWidth
+  print(imageWidth)
   imageHeight = naoImage[1]
-  print imageHeight
+  print(imageHeight)
   array = naoImage[6]
+
+
 
   # Create a PIL Image from our pixel array.
   im = Image.frombytes("RGB", (imageWidth, imageHeight), array)
 
   # Save the image.
   im.save("camImage.png", "PNG")
+
+  im = Image.open("camImage.png")
+
+  array = np.array(im)
+  
+  redVals = []
+  greenVals = []
+  blueVals = []
+  for i in range(imageWidth):
+    redVals.append([x[i][0] for x in array])
+    greenVals.append([x[i][1] for x in array])
+    blueVals.append([x[i][2] for x in array])
+
+
+  #redVals = np.transpose(redVals)
+  #print(str(redVals))
+  #print(np.shape(redVals))
+  #print(str(redVals[0]))
+  #print(np.shape(redVals[0]))
+  #print(str(redVals[1]))
+  #print(np.shape(redVals[1]))
+
+  summyR = np.sum(redVals)
+  summyB = np.sum(blueVals)
+  summyG = np.sum(greenVals)
+  print("red: " + str(summyR))
+  print("green: " + str(summyG))
+  print("blue: " + str(summyB))
+
+
   process()
 
 def process():
