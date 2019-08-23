@@ -14,6 +14,16 @@ from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
+
+# Initialize logger for logging summary for each episode in the continious learning process
+episode_logger = logging.getLogger("EpisodeLogger")
+episode_logger.setLevel(logging.INFO)
+fh = logging.FileHandler(f'nao_learning_log_{time.strftime("%Y_%m_%d_%H%M")}.log', mode='w')
+episode_logger.addHandler(fh)
+episode_logger.info("Time,Episode,TrainReward,TestReward")
+formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d,%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+fh.setFormatter(formatter)
+
 ENV_NAME = 'basic-v0'
 
 env = gym.make(ENV_NAME)
@@ -65,10 +75,13 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
                   random_process=random_process, gamma=.99, target_model_update=1e-3)
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
-# Okay, now it's time to learn something! We visualize the training here for show, but this
-# slows down training quite a lot. You can always safely abort the training prematurely using
-# Ctrl + C.
-agent.fit(env, nb_steps=1000, visualize=False, verbose=1, nb_max_episode_steps=200)
+
+try:
+    dqn.load_weights('dqn_{}_weights.h5f'.format(ENV_NAME))
+except (OSError):
+    logger.warning ("File not found")
+
+train_history = agent.fit(env, nb_steps=1000, visualize=False, verbose=2, nb_max_episode_steps=200)
 
 # After training is done, we save the final weights.
 agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
@@ -77,4 +90,12 @@ agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 pickle.dump(memory, open("memory.pkl", "wb"))
 
 # Finally, evaluate our algorithm for 5 episodes.
-agent.test(env, nb_episodes=5, visualize=False, nb_max_episode_steps=200)
+test_history = agent.test(env, nb_episodes=5, visualize=False, nb_max_episode_steps=200)
+
+
+#loading weights and model and logging taken from:
+#https://github.com/olavt/gym_co2_ventilation/blob/master/examples/test_keras_rl_continious.py
+train_rewards = train_history.history['episode_reward']
+test_rewards = test_history.history['episode_reward']
+for i in range(0, nb_episodes):
+    episode_logger.info(f'{(n - 1)*nb_episodes + i + 1},{train_rewards[i]},{test_rewards[i]}')
