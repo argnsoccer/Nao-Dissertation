@@ -30,7 +30,7 @@ logger.setLevel(logging.ERROR)
 # Initialize logger for logging summary for each episode in the continuous learning process
 episode_logger = logging.getLogger("EpisodeLogger")
 episode_logger.setLevel(logging.INFO)
-fh = logging.FileHandler("nao_learning_log_{}.log".format(time.strftime(%Y_%m_%d_%H%M)), mode="w")
+fh = logging.FileHandler("nao_learning_log_{}.log".format(datetime.now().strftime("%Y_%m_%d_%H%M")), mode="w")
 episode_logger.addHandler(fh)
 episode_logger.info("Time,Episode,TrainReward,TestReward")
 formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d,%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
