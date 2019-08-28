@@ -42,7 +42,10 @@ env = gym.make(ENV_NAME)
 np.random.seed(123)
 env.seed(123)
 
+#change for number of episodes to train/test
 nb_episodes = 1
+#change for number of training steps (and max test steps)
+nb_stepis = 30
 
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
@@ -82,7 +85,7 @@ try:
 except (IOError, EOFError):
     memory = SequentialMemory(limit=100000, window_length=1)
 
-
+# memory = SequentialMemory(limit=100000, window_length=1)
 random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, mu=0., sigma=.3)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
@@ -101,7 +104,7 @@ while True:
     n += 1
     logger.info ('Iteration #{}'.format(n))
 
-    train_history = agent.fit(env, nb_steps=1000, visualize=False, verbose=1, nb_max_episode_steps=200)
+    train_history = agent.fit(env, nb_steps=nb_stepis, visualize=False, verbose=1, nb_max_episode_steps=nb_stepis)
 
     # After training is done, we save the final weights.
     agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
@@ -110,7 +113,7 @@ while True:
     pickle.dump(memory, open("memory.pkl", "wb"))
 
     # Finally, evaluate our algorithm for nb_episodes episodes.
-    test_history = agent.test(env, nb_episodes=nb_episodes, visualize=False, nb_max_episode_steps=200)
+    test_history = agent.test(env, nb_episodes=nb_episodes, visualize=False, nb_max_episode_steps=nb_stepis)
 
 
     #loading weights and model and logging taken from:
