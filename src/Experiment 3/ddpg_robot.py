@@ -45,7 +45,7 @@ env.seed(123)
 #change for number of episodes to train/test
 nb_episodes = 1
 #change for number of training steps (and max test steps)
-nb_stepis = 30
+nb_stepis = 3000
 
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
@@ -93,10 +93,10 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
 
-try:
-    agent.load_weights('ddpg_{}_weights.h5f'.format(ENV_NAME))
-except (OSError):
-    logger.warning("File not found")
+# try:
+#     agent.load_weights('ddpg_{}_weights.h5f'.format(ENV_NAME))
+# except (OSError):
+#     logger.warning("File not found")
 
 
 n = 0
@@ -104,6 +104,7 @@ while True:
     n += 1
     logger.info ('Iteration #{}'.format(n))
 
+    #train
     train_history = agent.fit(env, nb_steps=nb_stepis, visualize=False, verbose=1, nb_max_episode_steps=nb_stepis)
 
     # After training is done, we save the final weights.
