@@ -89,8 +89,9 @@ def takeImage():
   print("green: " + str(summyG))
   print("blue: " + str(summyB))
 
+  print("total: " + str(summyR+summyB+summyG))
 
-  process()
+  # process()
 
 def process():
   """
@@ -127,22 +128,22 @@ def process():
   cv2.imwrite("blurredImg.png", blur)
 
   #perform CHT
-  #circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 150, 20, 0)
+  circles = cv2.HoughCircles(blur, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, 800, 150, 20, 0)
 
-  #try:
-    #circles = np.uint16(np.around(circles))
-  #except AttributeError:
-    #print("No Circles Found! Adjust parameters of CHT.")
+  try:
+    circles = np.uint16(np.around(circles))
+  except AttributeError:
+    print("No Circles Found! Adjust parameters of CHT.")
       
             
-  # try:
-  #    for i in circles[0,:]:
-  #       # draw the outer circle
-  #       cv2.circle(image,(i[0],i[1]),i[2],(0,255,0),2)
-  #       # draw the center of the circle
-  #       cv2.circle(image,(i[0],i[1]),2,(0,0,255),3)
-  # except TypeError:
-  #    print("No Circles Found! Adjust parameters of CHT")
+  try:
+     for i in circles[0,:]:
+        # draw the outer circle
+        cv2.circle(image,(i[0],i[1]),i[2],(0,255,0),2)
+        # draw the center of the circle
+        cv2.circle(image,(i[0],i[1]),2,(0,0,255),3)
+  except TypeError:
+     print("No Circles Found! Adjust parameters of CHT")
     
   #write out image with drawn circles
   cv2.imwrite("detectedCircles.png", image)

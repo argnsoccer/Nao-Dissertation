@@ -45,7 +45,7 @@ env.seed(123)
 #change for number of episodes to train/test
 nb_episodes = 1
 #change for number of training steps (and max test steps)
-nb_stepis = 500
+nb_stepis = 50
 
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
