@@ -1,1 +1,1 @@
-from gymNaoEnv.envs.env_basic import gymNaoEnv
+from gymNaoEnv.envs.env_basic import BasicEnv

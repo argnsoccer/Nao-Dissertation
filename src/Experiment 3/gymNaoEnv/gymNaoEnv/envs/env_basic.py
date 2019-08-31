@@ -22,15 +22,6 @@ STATE_HEIGHT = 80
 STATE_WIDTH = 60
 
 
-
-# This is the one action the robot can take (with two changing parameters)
-
-def rescale_actions(output, low, high):
-  range = high - low
-  temp = (output-low)/range
-  return temp*range + low
-
-
 class BasicEnv(gym.Env):
   metadata = {'render.modes': ['human', 'rgb_array', 'state_pixels']}
 
