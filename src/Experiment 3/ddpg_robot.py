@@ -108,7 +108,7 @@ while True:
     train_history = agent.fit(env, nb_steps=nb_stepis, visualize=False, verbose=1, nb_max_episode_steps=nb_stepis)
 
     # After training is done, we save the final weights.
-    agent.save_weights('ddpg_{}_nomad_weights.h5f'.format(ENV_NAME), overwrite=True)
+    agent.save_weights('ddpg_{}_nomad_actionswitch_weights.h5f'.format(ENV_NAME), overwrite=True)
 
     # Save memory
     pickle.dump(memory, open("memory.pkl", "wb"))

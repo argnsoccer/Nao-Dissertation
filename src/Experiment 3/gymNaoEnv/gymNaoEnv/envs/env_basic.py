@@ -38,7 +38,9 @@ class BasicEnv(gym.Env):
     self.green = 0.0
     
     # 0 = Orient, 1 = Move Forward, Also need continuous degree to orient or amount to move
-    self.action_space = spaces.Box(low = np.array([-math.pi/12, 0.0]), high = np.array([+math.pi/12, +0.5]), dtype = np.float64)
+    # self.action_space = spaces.Box(low = np.array([-math.pi/12, 0.0]), high = np.array([+math.pi/12, +0.5]), dtype = np.float64)
+    self.action_space = spaces.Box(low = np.array([ 0.0, -math.pi/12]), high = np.array([+0.5, -math.pi/12]), dtype = np.float64)
+    
     
     #pixels coming in, RGB, need to scale down resolution to state pixels
     self.observation_space = spaces.Box(low = 0, high = 255, shape=[STATE_WIDTH, STATE_HEIGHT, 3], dtype = np.int16)
@@ -106,10 +108,10 @@ class BasicEnv(gym.Env):
 
       # action[0] = np.clip(action[0], self.action_space.low[0], self.action_space.high[0])
       # action[1] = np.clip(action[1], self.action_space.low[1], self.action_space.high[1])
-      action[0] = action[0]*self.action_space.high[0]
-      action[1] = np.clip(action[1]*self.action_space.high[1],  self.action_space.low[1], self.action_space.high[1])
-      self.ang = action[0]
-      self.x = action[1]
+      action[1] = action[1]*self.action_space.high[1]
+      action[0] = np.clip(action[0]*self.action_space.high[0],  self.action_space.low[0], self.action_space.high[0])
+      self.ang = action[1]
+      self.x = action[0]
       
     self.move()
       
@@ -189,21 +191,24 @@ class BasicEnv(gym.Env):
 
     x = float(self.red + self.blue + self.green)
 
+    if x < 220000:
+      y = 0.5
+
     print("Sum: " + str(x))
 
     if action is not None:
       #discount
-      self.reward -= 1
-      step_reward = self.reward - self.prev_reward + float(x/480000)
+      self.reward -= 1.0
+      step_reward = self.reward - self.prev_reward + float(x/240000) - y
       print "\nstep_reward: " + str(step_reward) + "\n"
       self.prev_reward = self.reward
       if x > 1650000:
         done = True
-        motionProxy.rest()
+        
         if self.red > self.blue and self.red > self.green:
-          self.reward += 10000.0
+          self.reward += 100.0
         else:
-          self.reward -= 5000
+          self.reward -= 50
         
       
     self.prevRed = self.red
