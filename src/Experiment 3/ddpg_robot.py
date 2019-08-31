@@ -45,7 +45,7 @@ env.seed(123)
 #change for number of episodes to train/test
 nb_episodes = 1
 #change for number of training steps (and max test steps)
-nb_stepis = 3000
+nb_stepis = 500
 
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
@@ -60,7 +60,7 @@ actor.add(Activation('relu'))
 actor.add(Dense(16))
 actor.add(Activation('relu'))
 actor.add(Dense(nb_actions))
-actor.add(Activation('linear'))
+actor.add(Activation('tanh'))
 print(actor.summary())
 
 action_input = Input(shape=(nb_actions,), name='action_input')
@@ -74,7 +74,7 @@ x = Activation('relu')(x)
 x = Dense(32)(x)
 x = Activation('relu')(x)
 x = Dense(1)(x)
-x = Activation('linear')(x)
+x = Activation('tanh')(x)
 critic = Model(inputs=[action_input, observation_input], outputs=x)
 print(critic.summary())
 
@@ -86,17 +86,17 @@ except (IOError, EOFError):
     memory = SequentialMemory(limit=100000, window_length=1)
 
 # memory = SequentialMemory(limit=100000, window_length=1)
-random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, mu=0., sigma=.3)
+random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=0.15, mu=0., sigma=.3)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
                   random_process=random_process, gamma=.99, target_model_update=1e-3)
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
 
-# try:
-#     agent.load_weights('ddpg_{}_weights.h5f'.format(ENV_NAME))
-# except (OSError):
-#     logger.warning("File not found")
+try:
+    agent.load_weights('ddpg_{}_weights.h5f'.format(ENV_NAME))
+except (OSError):
+    logger.warning("File not found")
 
 
 n = 0
