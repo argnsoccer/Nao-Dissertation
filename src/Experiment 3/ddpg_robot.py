@@ -45,7 +45,7 @@ env.seed(123)
 #change for number of episodes to train/test
 nb_episodes = 1
 #change for number of training steps (and max test steps)
-nb_stepis = 50
+nb_stepis = 500
 
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
@@ -80,12 +80,12 @@ print(critic.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
-try:
-    memory = pickle.load(open("memory.pkl", "rb"))
-except (IOError, EOFError):
-    memory = SequentialMemory(limit=100000, window_length=1)
+# try:
+#     memory = pickle.load(open("memory.pkl", "rb"))
+# except (IOError, EOFError):
+#     memory = SequentialMemory(limit=100000, window_length=1)
 
-# memory = SequentialMemory(limit=100000, window_length=1)
+memory = SequentialMemory(limit=100000, window_length=1)
 random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=0.15, mu=0., sigma=.3)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
@@ -93,10 +93,10 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
 
-try:
-    agent.load_weights('ddpg_{}_weights.h5f'.format(ENV_NAME))
-except (OSError):
-    logger.warning("File not found")
+# try:
+#     agent.load_weights('ddpg_{}_nomad_weights.h5f'.format(ENV_NAME))
+# except (OSError):
+#     logger.warning("File not found")
 
 
 n = 0
@@ -108,7 +108,7 @@ while True:
     train_history = agent.fit(env, nb_steps=nb_stepis, visualize=False, verbose=1, nb_max_episode_steps=nb_stepis)
 
     # After training is done, we save the final weights.
-    agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+    agent.save_weights('ddpg_{}_nomad_weights.h5f'.format(ENV_NAME), overwrite=True)
 
     # Save memory
     pickle.dump(memory, open("memory.pkl", "wb"))

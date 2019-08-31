@@ -38,7 +38,7 @@ class BasicEnv(gym.Env):
     self.green = 0.0
     
     # 0 = Orient, 1 = Move Forward, Also need continuous degree to orient or amount to move
-    self.action_space = spaces.Box(low = np.array([-math.pi/6, 0.0]), high = np.array([+math.pi/6, +0.3]), dtype = np.float64)
+    self.action_space = spaces.Box(low = np.array([-math.pi/12, 0.0]), high = np.array([+math.pi/12, +0.5]), dtype = np.float64)
     
     #pixels coming in, RGB, need to scale down resolution to state pixels
     self.observation_space = spaces.Box(low = 0, high = 255, shape=[STATE_WIDTH, STATE_HEIGHT, 3], dtype = np.int16)
@@ -167,7 +167,7 @@ class BasicEnv(gym.Env):
 
     # when I redid the simulation, the walls I used were different or maybe not shiny enough so do not increase in red pixels??
     redDiff = (float(self.red) - float(self.prevRed))/4800
-    print("redSum: " + str(float(self.red)))
+
     blueDiff = (float(self.blue) - float(self.prevBlue))/4800
 
     greenDiff = (float(self.green) - float(self.prevGreen))/4800
@@ -187,12 +187,14 @@ class BasicEnv(gym.Env):
     #add reward factor of (redSum - 122500)/50000 or somethin like that 
     # x = (self.red - 120000)/4800
 
-    x = self.red + self.blue + self.green
+    x = float(self.red + self.blue + self.green)
+
+    print("Sum: " + str(x))
 
     if action is not None:
       #discount
       self.reward -= 1
-      step_reward = self.reward - self.prev_reward + x/480000
+      step_reward = self.reward - self.prev_reward + float(x/480000)
       print "\nstep_reward: " + str(step_reward) + "\n"
       self.prev_reward = self.reward
       if x > 1650000:
