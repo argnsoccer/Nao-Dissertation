@@ -39,9 +39,9 @@ class BasicEnv(gym.Env):
     
     # 0 = Orient, 1 = Move Forward, Also need continuous degree to orient or amount to move
     # self.action_space = spaces.Box(low = np.array([-math.pi/12, 0.0]), high = np.array([+math.pi/12, +0.5]), dtype = np.float64)
-    self.action_space = spaces.Box(low = np.array([ 0.0, -math.pi/12]), high = np.array([+0.5, -math.pi/12]), dtype = np.float64)
+    self.action_space = spaces.Box(low = np.array([+0.0, (-math.pi/9)]), high = np.array([+0.4, (+math.pi/9)]), dtype = np.float64)
     
-    
+  
     #pixels coming in, RGB, need to scale down resolution to state pixels
     self.observation_space = spaces.Box(low = 0, high = 255, shape=[STATE_WIDTH, STATE_HEIGHT, 3], dtype = np.int16)
 
@@ -108,8 +108,11 @@ class BasicEnv(gym.Env):
 
       # action[0] = np.clip(action[0], self.action_space.low[0], self.action_space.high[0])
       # action[1] = np.clip(action[1], self.action_space.low[1], self.action_space.high[1])
-      action[1] = action[1]*self.action_space.high[1]
-      action[0] = np.clip(action[0]*self.action_space.high[0],  self.action_space.low[0], self.action_space.high[0])
+      action[1] = float(action[1]*self.action_space.high[1])
+      # action[0] = np.clip(action[0]*self.action_space.high[0],  self.action_space.low[0], self.action_space.high[0])
+      temp = float(self.action_space.high[0]/2)
+      action[0] = float(temp*action[0] + temp)
+
       self.ang = action[1]
       self.x = action[0]
       
@@ -189,28 +192,38 @@ class BasicEnv(gym.Env):
     #add reward factor of (redSum - 122500)/50000 or somethin like that 
     # x = (self.red - 120000)/4800
 
-    x = float(self.red + self.blue + self.green)
 
-    if x < 220000:
-      y = 0.5
+    if self.red == self.blue == self.green:
+      x = 0.0
+    else:
+      x = float(self.red + self.blue + self.green)
 
+
+    # if self.red > self.blue and self.red > self. green:
+    #   y = 1.0
+
+    print("red: " + str(self.red))
+    print("blue: " + str(self.blue))
+    print("green: " + str(self.green))
     print("Sum: " + str(x))
 
     if action is not None:
       #discount
       self.reward -= 1.0
-      step_reward = self.reward - self.prev_reward + float(x/240000) - y
-      print "\nstep_reward: " + str(step_reward) + "\n"
+      step_reward = self.reward - self.prev_reward + float(x/240000)
       self.prev_reward = self.reward
-      if x > 1650000:
-        done = True
-        
+
+      if x > 500000:        
         if self.red > self.blue and self.red > self.green:
           self.reward += 100.0
         else:
-          self.reward -= 50
+          self.reward -= 100.0
+          step_reward = -10
+
+        done = True
         
-      
+    print "\nstep_reward: " + str(step_reward) + "\n"
+
     self.prevRed = self.red
     self.prevBlue = self.blue
     self.prevGreen = self.green
