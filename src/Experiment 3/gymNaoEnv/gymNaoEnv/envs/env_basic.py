@@ -40,7 +40,6 @@ class BasicEnv(gym.Env):
     # 0 = Orient, 1 = Move Forward, Also need continuous degree to orient or amount to move
     # self.action_space = spaces.Box(low = np.array([-math.pi/12, 0.0]), high = np.array([+math.pi/12, +0.5]), dtype = np.float64)
     self.action_space = spaces.Box(low = np.array([+0.0, (-math.pi/9)]), high = np.array([+0.4, (+math.pi/9)]), dtype = np.float64)
-    
   
     #pixels coming in, RGB, need to scale down resolution to state pixels
     self.observation_space = spaces.Box(low = 0, high = 255, shape=[STATE_WIDTH, STATE_HEIGHT, 3], dtype = np.int16)
