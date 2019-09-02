@@ -1,5 +1,5 @@
 # Nao-Dissertation
-Experiments in developing Learning for a NAO 
+### Experiments in developing Learning for a NAO V5 | NAOQI OS - 2.1.4 
 
 src: Experiment code and output
 
