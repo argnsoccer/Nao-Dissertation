@@ -34,9 +34,17 @@ Once all that is tested and done, install the custom gym environment.
 ### Experiment 1
 run *getandsaveanimage.py*, replacing the IP with the one the robot says, or 127.0.0.1 for a simulation
 
+Change the 11s in cv2.GaussianBlur(mask, (11, 11), 0) to 9 or even 5 for less noise.
+Change the cv2.HoughCircles() method for min and max radii of circles and other CHT parameters
+
+      NOTE: You will probably have to change the mask details depending on the red ball you use.
+      You can use AndreTrackAndKick/ColorPicker.py to threshold your ball's HSV values.
+
 ### Experiment 2
 run AndreTrackAndKick/*SearchKickAndre.py* or LavyMarshallTrackAndKick/*Full_Search_and_Kick.py* 
-      -NOTE: You will probably have to change the mask details depending on the red ball you use. You can use AndreTrackAndKick/*ColorPicker.py* to threshold your ball's HSV values.
+
+      NOTE: You will probably have to change the mask details depending on the red ball you use.
+      You can use AndreTrackAndKick/ColorPicker.py to threshold your ball's HSV values.
       
 ### Experiment 3
 run *ddpg_robot.py*(changing IP as necessary). Change the agent/critic networks or algorithm and optimization as desired in ddpg_robot.py. 
